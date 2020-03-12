@@ -1,0 +1,6 @@
+defang
+dnspython
+python-dateutil
+python-whois
+selenium
+tldextract
