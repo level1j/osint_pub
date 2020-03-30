@@ -128,7 +128,7 @@ def get_domain_item_registrar(content_dict):
 
 def output(domain_items_list, output_tsv, output_json):
     if output_tsv:
-        columns = ['registrar', 'registration', 'expiration', 'nameservers', 'email', 'name', 'organization', 'phone', 'address']
+        columns = ['domain', 'registrar', 'registration', 'expiration', 'nameservers', 'email', 'name', 'organization', 'phone', 'address']
         print('\t'.join(columns))
         output_string = ''
         for domain_items in domain_items_list:

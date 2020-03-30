@@ -61,6 +61,7 @@ def execute_python_whois(domain):
     python_whois_result = whois.whois(domain)
     python_whois_result = unique_python_whois_result(python_whois_result)
     domain_items = get_domain_items(python_whois_result)
+    domain_items['domain'] = domain
     return domain_items
 
 def unique_python_whois_result(result):
@@ -92,12 +93,12 @@ def get_domain_items(python_whois_result):
 
 def output(domain_items_list, output_tsv, output_json):
     if output_tsv:
-        columns = ['registrar', 'registration', 'expiration', 'nameservers', 'email', 'name', 'organization', 'phone', 'address']
+        columns = ['domain', 'registrar', 'registration', 'expiration', 'nameservers', 'email', 'name', 'organization', 'phone', 'address']
         print('\t'.join(columns))
         for domain_items in domain_items_list:
             output_string = ''
             for column in columns:
-                if column == 'registrar':
+                if column == 'domain' or column == 'registrar':
                     column_string = domain_items[column]
                 elif column == 'registration' or column == 'expiration' or column == 'nameservers' or column == 'email':
                     if isinstance(domain_items[column], list):

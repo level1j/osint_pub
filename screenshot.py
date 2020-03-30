@@ -77,10 +77,18 @@ def save_screenshot(url, useragent, mode=MODE_SMARTPHONE):
     driver.close()
     remove_geckodriver_log()
 
+def get_robotstxt_from_url(url):
+    o = urlparse(url)
+    o_bot = o._replace(path='/robots.txt')
+    url_robot = o_bot.geturl()
+    return url_robot
+
 def save_html(url, useragent, mode=MODE_SMARTPHONE):
     dirname_html = get_save_filename(url, mode) + '_html'
     filename_log = get_save_filename(url, mode) + '.html.log'
-    subprocess.run(['wget', '-HpkK', '--no-check-certificate', '--content-on-error', '--server-response', '-o', filename_log, '-P', dirname_html, '-U', useragent, '--prefer-family=IPv4', url], stdin=subprocess.DEVNULL, shell=False)
+    subprocess.run(['wget', '-HpkK', '--no-check-certificate', '--content-on-error', '--server-response', '-o', filename_log, '-P', dirname_html, '-U', useragent, '--prefer-family=IPv4', '-e', 'robots=off', url], stdin=subprocess.DEVNULL, shell=False)
+    url_robot = get_robotstxt_from_url(url)
+    subprocess.run(['wget', '-HpkK', '--no-check-certificate', '--content-on-error', '--server-response', '-o', filename_log, '-P', dirname_html, '-U', useragent, '--prefer-family=IPv4', '-e', 'robots=off', url_robot], stdin=subprocess.DEVNULL, shell=False)
 
 def get_useragent(mode, useragent):
     if mode == MODE_SMARTPHONE:

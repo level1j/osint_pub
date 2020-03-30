@@ -44,24 +44,32 @@ def get_certificate_items(content):
     cert_items['cn'] = get_certificate_items_cn(cert_items['subject'])
     cert_items['sans'] = get_certificate_items_sans(content)
     cert_items['notbefore'] = get_certificate_items_notbefore(content)
+    cert_items['notafter'] = get_certificate_items_notafter(content)
     return cert_items
 
 def get_certificate_items_notbefore(content):
-    s = re.search('Validity\s*\n\s*Not Before:\s*(?P<notbefore>.+)', content, re.IGNORECASE)
+    s = re.search('\s*Not Before\s*:\s*(?P<notbefore>.+)', content, re.IGNORECASE)
     if s:
         return get_standard_date_format(s.group('notbefore'))
     else:
         return None
 
+def get_certificate_items_notafter(content):
+    s = re.search('\s*Not After\s*:\s*(?P<notafter>.+)', content, re.IGNORECASE)
+    if s:
+        return get_standard_date_format(s.group('notafter'))
+    else:
+        return None
+
 def get_certificate_items_serial(content):
-    s = re.search('Serial Number:\s*\n*\s*(?P<serial>.+)', content, re.IGNORECASE)
+    s = re.search('Serial Number\s*:\s*\n*\s*(?P<serial>.+)', content, re.IGNORECASE)
     if s:
         return s.group('serial')
     else:
         return None
 
 def get_certificate_items_issure(content):
-    s = re.search('Issuer:\s*(?P<issure>.+)', content, re.IGNORECASE)
+    s = re.search('Issuer\s*:\s*(?P<issure>.+)', content, re.IGNORECASE)
     if s:
         return s.group('issure')
         #return get_x500attributetypes(s.group('issure'))
@@ -69,7 +77,7 @@ def get_certificate_items_issure(content):
         return None
 
 def get_certificate_items_subject(content):
-    s = re.search('Subject:\s*(?P<subject>.+)', content, re.IGNORECASE)
+    s = re.search('Subject\s*:\s*(?P<subject>.+)', content, re.IGNORECASE)
     if s:
         return s.group('subject')
         #return get_x500attributetypes(s.group('subject'))
@@ -84,7 +92,7 @@ def get_certificate_items_cn(subject):
         return None
 
 def get_certificate_items_sans(content):
-    s = re.search('X509v3 Subject Alternative Name:\s*\n\s*(?P<sans>.+)', content, re.IGNORECASE)
+    s = re.search('X509v3 Subject Alternative Name\s*:\s*\n\s*(?P<sans>.+)', content, re.IGNORECASE)
     if s:
         sans = s.group('sans')
         s = re.findall('DNS:(?P<dns>[^,]+)', sans, re.IGNORECASE)
@@ -109,7 +117,7 @@ def get_x500attributetypes(string):
 
 def output(cert_items, output_tsv, output_json):
     if output_tsv:
-        columns = ['cn', 'subject', 'serial', 'issure', 'notbefore', 'sans']
+        columns = ['cn', 'subject', 'serial', 'issure', 'notbefore', 'notafter', 'sans']
         print('\t'.join(columns))
         output_string = ''
         for column in columns:
