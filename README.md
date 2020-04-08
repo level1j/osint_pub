@@ -19,8 +19,10 @@ Also you may need Python 3.6 or later.
 
 ### python packages
 
+* beautifulsoup4
 * defang
 * dnspython
+* lxml
 * python-dateutil
 * python-whois
 * selenium
@@ -53,13 +55,13 @@ $ source ~/.bashrc
 
 ## Usage
 
-1. phish_preserve.py
+1. web_preserve.py
 
 Execute ip2as_cymru, whois_domain, rdap_wrapper, ssl_wrapper and screenshot
 
 ```
-$ ./phish_preserve.py --help
-usage: phish_preserve.py [-h] [-u URLS] [-f URL_FILE] [--no-nmap]
+$ ./web_preserve.py --help
+usage: web_preserve.py [-h] [-u URLS] [-f URL_FILE] [--no-nmap]
 
 Execute ip2as,whois_domain,rdap_wrapper,ssl_wrapper,screenshot
 

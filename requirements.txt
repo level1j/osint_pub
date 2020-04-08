@@ -1,5 +1,7 @@
+beautifulsoup4
 defang
 dnspython
+lxml
 python-dateutil
 python-whois
 selenium

@@ -19,6 +19,7 @@ RDAP_AUTO = 'rdap_wrapper.py'
 WHOIS_DOMAIN = 'whois_domain.py'
 SSL_AUTO = 'ssl_wrapper.py'
 SCREENSHOT = 'screenshot.py'
+DIRLIST4WGETLOG = 'dirlist4wgetlog.py'
 
 def get_now():
     d = datetime.datetime.now()
@@ -81,6 +82,8 @@ def execute_commands(url_list, flag_no_nmap):
         if ip is not None:
             subprocess.run(['python3', SCREENSHOT, '-p', '-s', '--http-https', '--save-html', url], stdin=subprocess.DEVNULL, shell=False)
             print()
+            subprocess.run(['python3', DIRLIST4WGETLOG, '-d', '.', domain], stdin=subprocess.DEVNULL, shell=False)
+            print()
             if not flag_no_nmap:
                 nmap_save_file(ip)
 
@@ -122,12 +125,14 @@ def change_program_path():
     global WHOIS_DOMAIN
     global SSL_AUTO
     global SCREENSHOT
+    global DIRLIST4WGETLOG
     program_dir = os.path.dirname(os.path.abspath(__file__))
     IP2AS_CYMRU = program_dir + '/' + IP2AS_CYMRU
     RDAP_AUTO = program_dir + '/' + RDAP_AUTO
     WHOIS_DOMAIN = program_dir + '/' + WHOIS_DOMAIN
     SSL_AUTO = program_dir + '/' + SSL_AUTO
     SCREENSHOT = program_dir + '/' + SCREENSHOT
+    DIRLIST4WGETLOG = program_dir + '/' + DIRLIST4WGETLOG
 
 if __name__ == '__main__':
     change_program_path()
