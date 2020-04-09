@@ -57,7 +57,7 @@ $ source ~/.bashrc
 
 1. web_preserve.py
 
-Execute ip2as_cymru, whois_domain, rdap_wrapper, ssl_wrapper and screenshot
+Execute ip2as_cymru, whois_domain, rdap_wrapper, ssl_wrapper, screenshot and dirlist4wgetlog
 
 ```
 $ ./web_preserve.py --help
@@ -151,4 +151,22 @@ optional arguments:
   -s, --smartphone	smart phone mode
   --save-html		save html
   --http-https		screenshot with both http and https
+```
+
+7. dirlist4wgetlog.py
+
+```
+$ ./dirlist4wgetlog.py --help
+usage: dirlist4wgetlog.py [-h] [-w WGET_LOG_LIST] [-d WGET_LOG_DIR_LIST]
+			  domain_list
+
+positional arguments:
+  domain_list		domain,domain2,...
+
+optional arguments:
+  -h, --help		show this help message and exit
+  -w WGET_LOG_LIST, --wget-log WGET_LOG_LIST
+			wget log file,wget log file2,...
+  -d WGET_LOG_DIR_LIST, --wget-log-dir WGET_LOG_DIR_LIST
+			dir(contains wget log file.),dir2,...
 ```

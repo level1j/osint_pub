@@ -25,6 +25,10 @@ def get_now():
     d = datetime.datetime.now()
     return d.strftime('%Y%m%d%H%M')
 
+def get_now_with_sec():
+    d = datetime.datetime.now()
+    return d.strftime('%Y%m%d%H%M%S')
+
 def get_validate_url(url):
     class bcolors:
         WARNING = '\033[93m'
@@ -58,34 +62,58 @@ def parse_url(url):
     ip = get_ip_from_dns(hostname)
     return url, scheme, hostname, domain, path, ip
 
+def mkdir_chdir_start(hostname):
+    cwd_dir = hostname + '_' + get_now_with_sec()
+    p = pathlib.Path(cwd_dir)
+    p.mkdir()
+    current_dir = pathlib.Path.cwd()
+    os.chdir(cwd_dir)
+    return current_dir, cwd_dir
+
+def mkdir_chdir_end(dir):
+    os.chdir(dir)
+    return
+
+def create_log_file(hostname):
+    log_file_name = hostname + '_webpreserve_' + get_now() + '.txt'
+    p = pathlib.Path(log_file_name)
+    return p.open(mode='w'), log_file_name
+
+def close_log_file(file_f):
+    file_f.close()
+    return
+
 def execute_commands(url_list, flag_no_nmap):
     global IP2AS_CYMRU
     global RDAP_AUTO
     global WHOIS_DOMAIN
     global SSL_AUTO
     global SCREENSHOT
-
-    print('url\tscheme\thostname\tdomain\tip')
     for url in url_list:
         url, scheme, hostname, domain, path, ip = parse_url(url)
-        print('{}\t{}\t{}\t{}\t{}\t{}'.format(url, scheme, hostname, domain, path, ip))
+        previous_dir, cwd_dir = mkdir_chdir_start(hostname)
+        log_file_f, log_file_name = create_log_file(hostname)
+        print('url\tscheme\thostname\tdomain\tip', file=log_file_f, flush=True)
+        print('{}\t{}\t{}\t{}\t{}\t{}'.format(url, scheme, hostname, domain, path, ip), file=log_file_f, flush=True)
         if ip is not None:
-            print()
-            subprocess.run(['python3', IP2AS_CYMRU, '-t', '-i', ip], stdin=subprocess.DEVNULL, shell=False)
+            print(file=log_file_f, flush=True)
+            subprocess.run(['python3', IP2AS_CYMRU, '-t', '-i', ip], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
             if scheme == 'https':
-                print()
-                subprocess.run(['python3', SSL_AUTO, '-t', '-s', hostname], stdin=subprocess.DEVNULL, shell=False)
-        print()
-        subprocess.run(['python3', RDAP_AUTO, '-t', '-d', domain], stdin=subprocess.DEVNULL, shell=False)
-        print()
-        subprocess.run(['python3', WHOIS_DOMAIN, '-t', '-d', domain], stdin=subprocess.DEVNULL, shell=False)
+                print(file=log_file_f, flush=True)
+                subprocess.run(['python3', SSL_AUTO, '-t', '-s', hostname], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
+        print(file=log_file_f, flush=True)
+        subprocess.run(['python3', RDAP_AUTO, '-t', '-d', domain], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
+        print(file=log_file_f, flush=True)
+        subprocess.run(['python3', WHOIS_DOMAIN, '-t', '-d', domain], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
         if ip is not None:
-            subprocess.run(['python3', SCREENSHOT, '-p', '-s', '--http-https', '--save-html', url], stdin=subprocess.DEVNULL, shell=False)
-            print()
-            subprocess.run(['python3', DIRLIST4WGETLOG, '-d', '.', domain], stdin=subprocess.DEVNULL, shell=False)
-            print()
+            print(file=log_file_f, flush=True)
+            subprocess.run(['python3', SCREENSHOT, '-p', '-s', '--http-https', '--save-html', url], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
+            print(file=log_file_f, flush=True)
+            subprocess.run(['python3', DIRLIST4WGETLOG, '-d', '.', domain], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
             if not flag_no_nmap:
                 nmap_save_file(ip)
+        close_log_file(log_file_f)
+        mkdir_chdir_end(previous_dir)
 
 def nmap_save_file(ip):
     filename = ip + '_nmap_' + get_now() + '.txt'
