@@ -17,6 +17,11 @@ SMARTPHONE_HEIGHT=812
 GECKODRIVER_LOG='geckodriver.log'
 MODE_SMARTPHONE='MODE_SMARTPHONE'
 MODE_PC='MODE_PC'
+SELENIUM_TIMEOUT_RESPONSE=1
+SELENIUM_TIMEOUT_RUNSCRIPT=5
+WGET_TIMEOUT=1
+WGET_RETRY_NUMBER=2
+WGET_MAX_FILE_SIZE='10m'
 
 def get_now():
     d = datetime.datetime.now()
@@ -57,7 +62,9 @@ def wevdriver_initialize(useragent, mode=MODE_SMARTPHONE):
     options = Options()
     options.add_argument('--headless')
     profile = webdriver.FirefoxProfile()
-    profile.set_preference("general.useragent.override", useragent)
+    profile.set_preference('general.useragent.override', useragent)
+    profile.set_preference('http.response.timeout', SELENIUM_TIMEOUT_RESPONSE)
+    profile.set_preference('dom.max_script_run_time', SELENIUM_TIMEOUT_RUNSCRIPT)
     profile.accept_untrusted_certs = True
     driver = webdriver.Firefox(firefox_profile=profile, firefox_options=options)
     if mode == MODE_SMARTPHONE:
@@ -69,13 +76,13 @@ def save_screenshot(url, useragent, mode=MODE_SMARTPHONE):
     try:
         driver = wevdriver_initialize(useragent, mode)
         driver.get(url)
+        el = driver.find_element_by_tag_name('body')
+        el.screenshot(filename_screenshot)
+        driver.close()
+        remove_geckodriver_log()
     except (selenium.common.exceptions.TimeoutException, selenium.common.exceptions.WebDriverException) as e:
         print('Exception: {} for {}'.format(e, url), file=sys.stderr)
-        return
-    el = driver.find_element_by_tag_name('body')
-    el.screenshot(filename_screenshot)
-    driver.close()
-    remove_geckodriver_log()
+    return
 
 def get_robotstxt_from_url(url):
     o = urlparse(url)
@@ -86,9 +93,9 @@ def get_robotstxt_from_url(url):
 def save_html(url, useragent, mode=MODE_SMARTPHONE):
     dirname_html = get_save_filename(url, mode) + '_html'
     filename_log = get_save_filename(url, mode) + '.html.log'
-    subprocess.run(['wget', '-HpkK', '--no-check-certificate', '--content-on-error', '--server-response', '-o', filename_log, '-P', dirname_html, '-U', useragent, '--prefer-family=IPv4', '-e', 'robots=off', url], stdin=subprocess.DEVNULL, shell=False)
+    subprocess.run(['wget', '-HpkK', '--no-check-certificate', '--content-on-error', '--server-response', '-o', filename_log, '-P', dirname_html, '-U', useragent, '--prefer-family=IPv4', '-e', 'robots=off', '-T', str(WGET_TIMEOUT), '-t', str(WGET_RETRY_NUMBER), '-Q', WGET_MAX_FILE_SIZE, url], stdin=subprocess.DEVNULL, shell=False)
     url_robot = get_robotstxt_from_url(url)
-    subprocess.run(['wget', '-HpkK', '--no-check-certificate', '--content-on-error', '--server-response', '-a', filename_log, '-P', dirname_html, '-U', useragent, '--prefer-family=IPv4', '-e', 'robots=off', url_robot], stdin=subprocess.DEVNULL, shell=False)
+    subprocess.run(['wget', '-HpkK', '--no-check-certificate', '--content-on-error', '--server-response', '-a', filename_log, '-P', dirname_html, '-U', useragent, '--prefer-family=IPv4', '-e', 'robots=off', '-T', str(WGET_TIMEOUT), '-t', str(WGET_RETRY_NUMBER), '-Q', WGET_MAX_FILE_SIZE, url_robot], stdin=subprocess.DEVNULL, shell=False)
 
 def get_useragent(mode, useragent):
     if mode == MODE_SMARTPHONE:

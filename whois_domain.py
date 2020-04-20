@@ -116,7 +116,10 @@ def output(domain_items_list, output_tsv, output_json):
                         if domain_items['registrant'][a] is None:
                             column_string_registrant = ''
                         else:
-                            column_string_registrant = domain_items['registrant'][a]
+                            if isinstance(domain_items['registrant'][a], list):
+                                column_string_registrant = ','.join(domain_items['registrant'][a])
+                            else:
+                                column_string_registrant = domain_items['registrant'][a]
                             flag_address_exist = True
                         column_string = column_string + a + ':' + column_string_registrant + ','
                     if flag_address_exist:

@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 import pathlib
 import os
+import sys
 import re
 import json
 import pprint
@@ -33,6 +34,9 @@ def get_save_pem(servername):
 def get_certificate_items_from_file(cert_txt_file):
     p = subprocess.run(['openssl', 'x509', '-text', '-in', cert_txt_file], stdout=subprocess.PIPE, stdin=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=False)
     content = p.stdout.decode()
+    if content == '':
+        print('No certification file', file=sys.stderr)
+        sys.exit()
     cert_items = get_certificate_items(content)
     return cert_items
 
@@ -85,6 +89,8 @@ def get_certificate_items_subject(content):
         return None
 
 def get_certificate_items_cn(subject):
+    if subject is None:
+        return None
     s = re.search('CN\s*=\s*(?P<cn>[^,]+)', subject, re.IGNORECASE)
     if s:
         return s.group('cn')
