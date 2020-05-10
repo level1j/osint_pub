@@ -6,3 +6,4 @@ python-dateutil
 python-whois
 selenium
 tldextract
+yara

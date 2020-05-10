@@ -20,6 +20,7 @@ WHOIS_DOMAIN = 'whois_domain.py'
 SSL_AUTO = 'ssl_wrapper.py'
 SCREENSHOT = 'screenshot.py'
 DIRLIST4WGETLOG = 'dirlist4wgetlog.py'
+IDENTIFY_TARGET_ADVERSARY = 'identify_target_adversary.py'
 
 def get_now():
     d = datetime.datetime.now()
@@ -112,6 +113,9 @@ def execute_commands(url_list, flag_no_nmap):
             subprocess.run(['python3', DIRLIST4WGETLOG, '-d', '.', domain], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
             if not flag_no_nmap:
                 nmap_save_file(ip)
+                #pass
+        print(file=log_file_f, flush=True)
+        subprocess.run(['python3', IDENTIFY_TARGET_ADVERSARY, '-d', '.'], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
         close_log_file(log_file_f)
         mkdir_chdir_end(previous_dir)
 
@@ -154,6 +158,7 @@ def change_program_path():
     global SSL_AUTO
     global SCREENSHOT
     global DIRLIST4WGETLOG
+    global IDENTIFY_TARGET_ADVERSARY
     program_dir = os.path.dirname(os.path.abspath(__file__))
     IP2AS_CYMRU = program_dir + '/' + IP2AS_CYMRU
     RDAP_AUTO = program_dir + '/' + RDAP_AUTO
@@ -161,6 +166,7 @@ def change_program_path():
     SSL_AUTO = program_dir + '/' + SSL_AUTO
     SCREENSHOT = program_dir + '/' + SCREENSHOT
     DIRLIST4WGETLOG = program_dir + '/' + DIRLIST4WGETLOG
+    IDENTIFY_TARGET_ADVERSARY = program_dir + '/' + IDENTIFY_TARGET_ADVERSARY
 
 if __name__ == '__main__':
     change_program_path()

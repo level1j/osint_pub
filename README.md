@@ -12,6 +12,7 @@ Also you may need Python 3.6 or later.
 * firefox-geckodriver
 * git
 * golang
+* libyara3
 * netcat-traditional
 * nmap
 * python3-pip
@@ -27,19 +28,21 @@ Also you may need Python 3.6 or later.
 * python-whois
 * selenium
 * tldextract
+* yara
 
 ## Installation
 
 To install packages
 
 ```
-$ sudo apt install firefox-geckodriver git golang netcat-traditional nmap python3-pip whois
+$ sudo apt install firefox-geckodriver git golang netcat-traditional nmap python3-pip whois libyara3
+$ sudo ln -s /usr/local/lib/python<X.X>/dist-packages/usr/lib/libyara.so /usr/lib/libyara.so
 ```
 
 To install python packages
 
 ```
-pip3 install -r requirements.txt
+$ pip3 install -r requirements.txt
 ```
 
 To install rdap
@@ -153,7 +156,7 @@ optional arguments:
   --http-https		screenshot with both http and https
 ```
 
-7. dirlist4wgetlog.py
+8. dirlist4wgetlog.py
 
 ```
 $ ./dirlist4wgetlog.py --help
@@ -169,4 +172,19 @@ optional arguments:
 			wget log file,wget log file2,...
   -d WGET_LOG_DIR_LIST, --wget-log-dir WGET_LOG_DIR_LIST
 			dir(contains wget log file.),dir2,...
+```
+
+7. identify_target_adversary.py
+
+```
+$ ./identify_target_adversary.py --help
+usage: identify_target_adversary.py [-h] [-d TARGET_DIR]
+				    [--yara_rules YARA_RULES]
+
+optional arguments:
+  -h, --help		show this help message and exit
+  -d TARGET_DIR, --dir TARGET_DIR
+			webpreserve directory
+  --yara_rules YARA_RULES
+			yara rule file or directory
 ```
