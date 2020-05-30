@@ -8,9 +8,11 @@ import os
 import sys
 import subprocess
 import datetime
+from pytz import timezone
 import argparse
 
-USERAGENT_SMARTPHONE='Mozilla/5.0 (iPhone; CPU OS 10_15_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Mobile/14E304 Safari/605.1.15'
+#USERAGENT_SMARTPHONE='Mozilla/5.0 (iPhone; CPU OS 10_15_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Mobile/14E304 Safari/605.1.15'
+USERAGENT_SMARTPHONE='Mozilla/5.0 (iPhone; CPU iPhone OS 13_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/81.0.4044.124 Mobile/15E148 Safari/604.1'
 USERAGENT_PC='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:73.0) Gecko/20100101 Firefox/73.0'
 SMARTPHONE_WIDTH=375
 SMARTPHONE_HEIGHT=812
@@ -19,12 +21,12 @@ MODE_SMARTPHONE='MODE_SMARTPHONE'
 MODE_PC='MODE_PC'
 SELENIUM_TIMEOUT_RESPONSE=1
 SELENIUM_TIMEOUT_RUNSCRIPT=5
-WGET_TIMEOUT=1
+WGET_TIMEOUT=10
 WGET_RETRY_NUMBER=2
 WGET_MAX_FILE_SIZE='10m'
 
 def get_now():
-    d = datetime.datetime.now()
+    d = datetime.datetime.now(timezone('UTC'))
     return d.strftime('%Y%m%d%H%M')
 
 def get_validate_url(url):

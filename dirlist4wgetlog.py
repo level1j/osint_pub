@@ -10,6 +10,7 @@ from selenium.webdriver.firefox.options import Options
 from bs4 import BeautifulSoup
 import datetime
 import time
+from pytz import timezone
 import pathlib
 import re
 import os
@@ -19,7 +20,8 @@ import argparse
 import pprint
 
 MODE_SMARTPHONE='MODE_SMARTPHONE'
-USERAGENT_SMARTPHONE='Mozilla/5.0 (iPhone; CPU OS 10_15_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Mobile/14E304 Safari/605.1.15'
+#USERAGENT_SMARTPHONE='Mozilla/5.0 (iPhone; CPU OS 10_15_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Mobile/14E304 Safari/605.1.15'
+USERAGENT_SMARTPHONE='Mozilla/5.0 (iPhone; CPU iPhone OS 13_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/81.0.4044.124 Mobile/15E148 Safari/604.1'
 USERAGENT_PC='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:73.0) Gecko/20100101 Firefox/73.0'
 WGET_TIMEOUT=1
 WGET_RETRY_NUMBER=2
@@ -27,7 +29,7 @@ WGET_MAX_FILE_SIZE='10m'
 INTERESTING_EXTS = ['php', 'zip', 'gz', 'tgz', 'sh', 'asp', 'csv', 'log', '']
 
 def get_now():
-    d = datetime.datetime.now()
+    d = datetime.datetime.now(timezone('UTC'))
     return d.strftime('%Y%m%d%H%M')
 
 def get_domain_from_dns(dns):

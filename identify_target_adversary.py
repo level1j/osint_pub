@@ -33,8 +33,11 @@ def exist_relative_pngfile(html_dir):
 def sort_html_dir(dir_list):
     new_dir_list = []
     for dir in dir_list:
+        '''
         if exist_relative_pngfile(dir):
             new_dir_list.append(dir)
+        '''
+        new_dir_list.append(dir)
     new_dir_list = sort_smartphone_pc_https_http(new_dir_list)
     return new_dir_list
 
@@ -132,6 +135,7 @@ if __name__ == '__main__':
     html_dir_list = sort_html_dir(html_dir_list)
     matches_yara.extend(yara_execute(html_dir_list, rules))
 
+    matches_yara = list(set(matches_yara))
     matches_yara.sort()
     matches_yara = ','.join(matches_yara)
     print('yara matches:\t{}'.format(matches_yara))

@@ -156,7 +156,7 @@ optional arguments:
   --http-https		screenshot with both http and https
 ```
 
-8. dirlist4wgetlog.py
+7. dirlist4wgetlog.py
 
 ```
 $ ./dirlist4wgetlog.py --help
@@ -174,7 +174,7 @@ optional arguments:
 			dir(contains wget log file.),dir2,...
 ```
 
-7. identify_target_adversary.py
+8. identify_target_adversary.py
 
 ```
 $ ./identify_target_adversary.py --help

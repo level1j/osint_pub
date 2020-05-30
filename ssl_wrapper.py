@@ -3,6 +3,7 @@ import defang
 import argparse
 import datetime
 import dateutil.parser
+from pytz import timezone
 import subprocess
 import tempfile
 import pathlib
@@ -13,7 +14,7 @@ import json
 import pprint
 
 def get_now():
-    d = datetime.datetime.now()
+    d = datetime.datetime.now(timezone('UTC'))
     return d.strftime('%Y%m%d%H%M')
 
 def get_standard_date_format(string):

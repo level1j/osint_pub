@@ -7,6 +7,7 @@ import argparse
 import pprint
 import re
 import datetime
+from pytz import timezone
 import dateutil.parser
 import pathlib
 import json
@@ -23,11 +24,11 @@ DIRLIST4WGETLOG = 'dirlist4wgetlog.py'
 IDENTIFY_TARGET_ADVERSARY = 'identify_target_adversary.py'
 
 def get_now():
-    d = datetime.datetime.now()
+    d = datetime.datetime.now(timezone('UTC'))
     return d.strftime('%Y%m%d%H%M')
 
 def get_now_with_sec():
-    d = datetime.datetime.now()
+    d = datetime.datetime.now(timezone('UTC'))
     return d.strftime('%Y%m%d%H%M%S')
 
 def get_validate_url(url):
@@ -94,7 +95,7 @@ def execute_commands(url_list, flag_no_nmap):
         url, scheme, hostname, domain, path, ip = parse_url(url)
         previous_dir, cwd_dir = mkdir_chdir_start(hostname)
         log_file_f, log_file_name = create_log_file(hostname)
-        print('url\tscheme\thostname\tdomain\tip', file=log_file_f, flush=True)
+        print('url\tscheme\thostname\tdomain\tpath\tip', file=log_file_f, flush=True)
         print('{}\t{}\t{}\t{}\t{}\t{}'.format(url, scheme, hostname, domain, path, ip), file=log_file_f, flush=True)
         if ip is not None:
             print(file=log_file_f, flush=True)
@@ -103,8 +104,8 @@ def execute_commands(url_list, flag_no_nmap):
                 print(file=log_file_f, flush=True)
                 subprocess.run(['python3', SSL_AUTO, '-t', '-s', hostname], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
         print(file=log_file_f, flush=True)
-        subprocess.run(['python3', RDAP_AUTO, '-t', '-d', domain], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
-        print(file=log_file_f, flush=True)
+        #subprocess.run(['python3', RDAP_AUTO, '-t', '-d', domain], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
+        #print(file=log_file_f, flush=True)
         subprocess.run(['python3', WHOIS_DOMAIN, '-t', '-d', domain], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
         if ip is not None:
             print(file=log_file_f, flush=True)
@@ -121,7 +122,7 @@ def execute_commands(url_list, flag_no_nmap):
 
 def nmap_save_file(ip):
     filename = ip + '_nmap_' + get_now() + '.txt'
-    subprocess.run(['nmap', '-Pn', '-sV', '-sC', '-T4', '-oN', filename, ip], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, shell=False)
+    subprocess.run(['nmap', '-Pn', '-sV', '-sC', '-T4', '-F', '-oN', filename, ip], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, shell=False)
     return filename
 
 def import_domain_file(domain_file):
