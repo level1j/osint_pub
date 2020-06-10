@@ -96,10 +96,11 @@ def wevdriver_initialize_chrome(useragent, mode=MODE_SMARTPHONE):
     options = Options()
     options.add_argument('--headless')
     options.add_argument('user-agent=' + useragent)
-    options.add_argument('--ignore-certificate-errors')    driver = webdriver.Chrome(options=options)
+    options.add_argument('--ignore-certificate-errors')
     options.add_argument('--disable-gpu')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--no-sandbox')
+    driver = webdriver.Chrome(options=options)
     if mode == MODE_SMARTPHONE:
         driver.set_window_size(SMARTPHONE_WIDTH, SMARTPHONE_HEIGHT)
     return driver
