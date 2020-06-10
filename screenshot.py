@@ -3,7 +3,10 @@ import defang
 import selenium
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.chrome.options import Options
+from Screenshot import Screenshot_Clipping
 from urllib.parse import urlparse
+import time
 import os
 import sys
 import subprocess
@@ -21,6 +24,7 @@ MODE_SMARTPHONE='MODE_SMARTPHONE'
 MODE_PC='MODE_PC'
 SELENIUM_TIMEOUT_RESPONSE=1
 SELENIUM_TIMEOUT_RUNSCRIPT=5
+SLEEP_TIME=10
 WGET_TIMEOUT=10
 WGET_RETRY_NUMBER=2
 WGET_MAX_FILE_SIZE='10m'
@@ -60,7 +64,7 @@ def get_save_filename(url, mode):
     o = urlparse(url)
     return o.scheme + '_' + o.hostname + '_' + suffix + '_' + get_now()
 
-def wevdriver_initialize(useragent, mode=MODE_SMARTPHONE):
+def wevdriver_initialize_firefox(useragent, mode=MODE_SMARTPHONE):
     options = Options()
     options.add_argument('--headless')
     profile = webdriver.FirefoxProfile()
@@ -73,18 +77,51 @@ def wevdriver_initialize(useragent, mode=MODE_SMARTPHONE):
         driver.set_window_size(SMARTPHONE_WIDTH, SMARTPHONE_HEIGHT)
     return driver
 
-def save_screenshot(url, useragent, mode=MODE_SMARTPHONE):
+def save_screenshot_firefox(url, useragent, mode=MODE_SMARTPHONE):
     filename_screenshot = get_save_filename(url, mode) + '.png'
     try:
-        driver = wevdriver_initialize(useragent, mode)
+        driver = wevdriver_initialize_firefox(useragent, mode)
         driver.get(url)
+        time.sleep(SLEEP_TIME)
         el = driver.find_element_by_tag_name('body')
         el.screenshot(filename_screenshot)
         driver.close()
+        driver.quit()
         remove_geckodriver_log()
     except (selenium.common.exceptions.TimeoutException, selenium.common.exceptions.WebDriverException) as e:
         print('Exception: {} for {}'.format(e, url), file=sys.stderr)
     return
+
+def wevdriver_initialize_chrome(useragent, mode=MODE_SMARTPHONE):
+    options = Options()
+    options.add_argument('--headless')
+    options.add_argument('--disable-gpu')
+    options.add_argument('user-agent=' + useragent)
+    options.add_argument('--ignore-certificate-errors')
+    driver = webdriver.Chrome(options=options)
+    if mode == MODE_SMARTPHONE:
+        driver.set_window_size(SMARTPHONE_WIDTH, SMARTPHONE_HEIGHT)
+    return driver
+
+def save_screenshot_chrome(url, useragent, mode=MODE_SMARTPHONE):
+    filename_screenshot = get_save_filename(url, mode) + '.png'
+    try:
+        driver = wevdriver_initialize_chrome(useragent, mode)
+        driver.get(url)
+        time.sleep(SLEEP_TIME)
+        #el = driver.find_element_by_tag_name('body')
+        #el.screenshot(filename_screenshot)
+        ob=Screenshot_Clipping.Screenshot()
+        img_url=ob.full_Screenshot(driver, save_path='.', image_name=filename_screenshot)
+        driver.close()
+        driver.quit()
+    except (selenium.common.exceptions.TimeoutException, selenium.common.exceptions.WebDriverException) as e:
+        print('Exception: {} for {}'.format(e, url), file=sys.stderr)
+    return
+
+def save_screenshot(url, useragent, mode=MODE_SMARTPHONE):
+    #save_screenshot_firefox(url, useragent, mode)
+    save_screenshot_chrome(url, useragent, mode)
 
 def get_robotstxt_from_url(url):
     o = urlparse(url)

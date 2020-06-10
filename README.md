@@ -9,6 +9,7 @@ Also you may need Python 3.6 or later.
 
 ### packages
 
+* chromium-chromedriver
 * firefox-geckodriver
 * git
 * golang
@@ -27,6 +28,7 @@ Also you may need Python 3.6 or later.
 * python-dateutil
 * python-whois
 * selenium
+* Selenium-Screenshot
 * tldextract
 * yara
 
