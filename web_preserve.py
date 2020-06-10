@@ -104,8 +104,8 @@ def execute_commands(url_list, flag_no_nmap):
                 print(file=log_file_f, flush=True)
                 subprocess.run(['python3', SSL_AUTO, '-t', '-s', hostname], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
         print(file=log_file_f, flush=True)
-        #subprocess.run(['python3', RDAP_AUTO, '-t', '-d', domain], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
-        #print(file=log_file_f, flush=True)
+        subprocess.run(['python3', RDAP_AUTO, '-t', '-d', domain], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
+        print(file=log_file_f, flush=True)
         subprocess.run(['python3', WHOIS_DOMAIN, '-t', '-d', domain], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
         if ip is not None:
             print(file=log_file_f, flush=True)
