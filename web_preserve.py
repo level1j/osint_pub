@@ -51,7 +51,8 @@ def get_ip_from_dns(d):
     try:
         answers = dns.resolver.query(d, 'A')
         return str(answers[0])
-    except dns.resolver.NXDOMAIN:
+    except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer) as e:
+        print(e)
         return None
 
 def parse_url(url):
