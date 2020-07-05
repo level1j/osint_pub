@@ -9,6 +9,7 @@ import re
 import datetime
 from pytz import timezone
 import dateutil.parser
+import ipaddress
 import pathlib
 import json
 import subprocess
@@ -53,7 +54,14 @@ def get_ip_from_dns(d):
         return str(answers[0])
     except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer) as e:
         print(e)
-        return None
+        return '-'
+
+def is_ipaddress(str):
+    try:
+        ipaddress.ip_address(str)
+        return True
+    except ValueError:
+        return False
 
 def parse_url(url):
     url = get_validate_url(url)
@@ -61,8 +69,12 @@ def parse_url(url):
     scheme = o.scheme
     hostname = o.hostname
     path = o.path
-    domain = get_domain_from_dns(hostname)
-    ip = get_ip_from_dns(hostname)
+    if not is_ipaddress(hostname):
+        domain = get_domain_from_dns(hostname)
+        ip = get_ip_from_dns(hostname)
+    else:
+        domain = '-'
+        ip = hostname
     return url, scheme, hostname, domain, path, ip
 
 def mkdir_chdir_start(hostname):
@@ -98,17 +110,18 @@ def execute_commands(url_list, flag_no_nmap):
         log_file_f, log_file_name = create_log_file(hostname)
         print('url\tscheme\thostname\tdomain\tpath\tip', file=log_file_f, flush=True)
         print('{}\t{}\t{}\t{}\t{}\t{}'.format(url, scheme, hostname, domain, path, ip), file=log_file_f, flush=True)
-        if ip is not None:
+        if ip != '-':
             print(file=log_file_f, flush=True)
             subprocess.run(['python3', IP2AS_CYMRU, '-t', '-i', ip], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
             if scheme == 'https':
                 print(file=log_file_f, flush=True)
                 subprocess.run(['python3', SSL_AUTO, '-t', '-s', hostname], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
-        print(file=log_file_f, flush=True)
-        subprocess.run(['python3', RDAP_AUTO, '-t', '-d', domain], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
-        print(file=log_file_f, flush=True)
-        subprocess.run(['python3', WHOIS_DOMAIN, '-t', '-d', domain], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
-        if ip is not None:
+        if domain != '-':
+            print(file=log_file_f, flush=True)
+            subprocess.run(['python3', RDAP_AUTO, '-t', '-d', domain], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
+            print(file=log_file_f, flush=True)
+            subprocess.run(['python3', WHOIS_DOMAIN, '-t', '-d', domain], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
+        if ip != '-':
             print(file=log_file_f, flush=True)
             subprocess.run(['python3', SCREENSHOT, '-p', '-s', '--http-https', '--save-html', url], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
             print(file=log_file_f, flush=True)
