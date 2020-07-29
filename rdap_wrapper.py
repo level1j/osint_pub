@@ -92,12 +92,13 @@ def get_domain_items_entities(content_dict):
         for entity in content_dict['entities']:
             roles = ','.join(entity['roles'])
             vcards[roles] = {}
-            for e in entity['vcardArray'][1][1:]:
-                if e[3] == '':
-                    continue
-                if e[0] == 'tel':
-                    e[3] = remove_tel(e[3])
-                vcards[roles][e[0]] = e[3]
+            if 'vcardArray' in entity:
+                for e in entity['vcardArray'][1][1:]:
+                    if e[3] == '':
+                        continue
+                    if e[0] == 'tel':
+                        e[3] = remove_tel(e[3])
+                    vcards[roles][e[0]] = e[3]
             if len(vcards[roles]) == 0:
                 del vcards[roles]
             vcards_recursive = get_domain_items_entities(entity)
