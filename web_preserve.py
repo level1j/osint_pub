@@ -15,6 +15,8 @@ import json
 import subprocess
 import os
 import sys
+import psutil
+import shutil
 
 IP2AS_CYMRU = 'ip2as_cymru.py'
 RDAP_AUTO = 'rdap_wrapper.py'
@@ -23,6 +25,8 @@ SSL_AUTO = 'ssl_wrapper.py'
 SCREENSHOT = 'screenshot.py'
 DIRLIST4WGETLOG = 'dirlist4wgetlog.py'
 IDENTIFY_TARGET_ADVERSARY = 'identify_target_adversary.py'
+OPENVPN_VPNGATE_EC2 = 'openvpn_vpngate_ec2.py'
+FLAG_OPENVPN = False
 
 def get_now():
     d = datetime.datetime.now(timezone('UTC'))
@@ -69,6 +73,8 @@ def parse_url(url):
     scheme = o.scheme
     hostname = o.hostname
     path = o.path
+    if path == '/':
+        path = ''
     if not is_ipaddress(hostname):
         domain = get_domain_from_dns(hostname)
         ip = get_ip_from_dns(hostname)
@@ -98,6 +104,48 @@ def close_log_file(file_f):
     file_f.close()
     return
 
+def exist_filepath(filepath):
+    p = pathlib.Path(filepath)
+    if p.exists():
+        return True
+    else:
+        return False
+
+def exist_openvpn_vpngate_ec2():
+    return exist_filepath(OPENVPN_VPNGATE_EC2)
+
+def exist_openvpn():
+    if shutil.which('openvpn') is not None:
+        return True
+    else:
+        return False
+
+def check_openvpn():
+    if FLAG_OPENVPN and exist_openvpn() and exist_openvpn_vpngate_ec2():
+        return True
+    else:
+        return False
+
+def get_pid_list(psname, args=None):
+    pid_list = []
+    try:
+        pid_list = list(map(int, subprocess.check_output(["pidof", psname]).split()))
+    except subprocess.CalledProcessError as e:
+        print('Exception: {}'.format(e))
+    if args is not None:
+        pid_list_new = []
+        for pid in pid_list:
+            try:
+                p = psutil.Process(pid)
+                cmdline = p.cmdline()
+                for c in cmdline[1:]:
+                    if args in c:
+                        pid_list_new.append(pid)
+            except psutil.AccessDenied as e:
+                print('Exception: {}'.format(e))
+        pid_list = pid_list_new
+    return pid_list
+
 def execute_commands(url_list, flag_no_nmap):
     global IP2AS_CYMRU
     global RDAP_AUTO
@@ -110,6 +158,11 @@ def execute_commands(url_list, flag_no_nmap):
         log_file_f, log_file_name = create_log_file(hostname)
         print('url\tscheme\thostname\tdomain\tpath\tip', file=log_file_f, flush=True)
         print('{}\t{}\t{}\t{}\t{}\t{}'.format(url, scheme, hostname, domain, path, ip), file=log_file_f, flush=True)
+        if check_openvpn():
+            pid_list = get_pid_list('openvpn')
+            if len(pid_list) > 0:
+                print(file=log_file_f, flush=True)
+                subprocess.run(['python3', OPENVPN_VPNGATE_EC2, '-k'], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
         if ip != '-':
             print(file=log_file_f, flush=True)
             subprocess.run(['python3', IP2AS_CYMRU, '-t', '-i', ip], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
@@ -122,13 +175,29 @@ def execute_commands(url_list, flag_no_nmap):
             print(file=log_file_f, flush=True)
             subprocess.run(['python3', WHOIS_DOMAIN, '-t', '-d', domain], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
         if ip != '-':
+            if check_openvpn():
+                pid_list = get_pid_list('openvpn')
+                if len(pid_list) == 0:
+                    print(file=log_file_f, flush=True)
+                    subprocess.run(['python3', OPENVPN_VPNGATE_EC2], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
             print(file=log_file_f, flush=True)
-            subprocess.run(['python3', SCREENSHOT, '-p', '-s', '--http-https', '--save-html', url], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
+            subprocess.run(['python3', SCREENSHOT, '-p', '-s', '--save-html', url], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
             print(file=log_file_f, flush=True)
             subprocess.run(['python3', DIRLIST4WGETLOG, '-d', '.', domain], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
+            if check_openvpn():
+                pid_list = get_pid_list('python3', args='web_preserve.py')
+                if len(pid_list) == 1:
+                    print(file=log_file_f, flush=True)
+                    subprocess.run(['python3', OPENVPN_VPNGATE_EC2, '-k'], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
             if not flag_no_nmap:
                 nmap_save_file(ip)
                 #pass
+            #just in case
+            if check_openvpn():
+                pid_list = get_pid_list('python3', args='web_preserve.py')
+                if len(pid_list) == 1:
+                    print(file=log_file_f, flush=True)
+                    subprocess.run(['python3', OPENVPN_VPNGATE_EC2, '-k'], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
         print(file=log_file_f, flush=True)
         subprocess.run(['python3', IDENTIFY_TARGET_ADVERSARY, '-d', '.'], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
         close_log_file(log_file_f)
@@ -136,7 +205,7 @@ def execute_commands(url_list, flag_no_nmap):
 
 def nmap_save_file(ip):
     filename = ip + '_nmap_' + get_now() + '.txt'
-    subprocess.run(['nmap', '-Pn', '-sV', '-sC', '-T4', '-F', '-oN', filename, ip], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, shell=False)
+    subprocess.run(['nmap', '-Pn', '-sV', '--script=safe', '-T4', '-F', '-oN', filename, ip], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, shell=False)
     return filename
 
 def import_domain_file(domain_file):
@@ -159,11 +228,14 @@ def parse_domain(domains, domain_file):
     return domain_list
 
 def parse_options():
+    global FLAG_OPENVPN
     parser = argparse.ArgumentParser(description='Execute ip2as,whois_domain,rdap_wrapper,ssl_wrapper,screenshot')
     parser.add_argument('-u', '--url', dest='urls', help='url1[,url2]')
     parser.add_argument('-f', '--file', action='store', dest='url_file', help='url list file')
     parser.add_argument('--no-nmap', action='store_true', dest='flag_no_nmap', default=False, help='disable nmap')
+    parser.add_argument('-v', '--openvpn', action='store_true', dest='flag_openvpn', default=FLAG_OPENVPN, help='use vpn')
     args = parser.parse_args()
+    FLAG_OPENVPN = args.flag_openvpn
     return args
 
 def change_program_path():
@@ -174,6 +246,7 @@ def change_program_path():
     global SCREENSHOT
     global DIRLIST4WGETLOG
     global IDENTIFY_TARGET_ADVERSARY
+    global OPENVPN_VPNGATE_EC2
     program_dir = os.path.dirname(os.path.abspath(__file__))
     IP2AS_CYMRU = program_dir + '/' + IP2AS_CYMRU
     RDAP_AUTO = program_dir + '/' + RDAP_AUTO
@@ -182,10 +255,14 @@ def change_program_path():
     SCREENSHOT = program_dir + '/' + SCREENSHOT
     DIRLIST4WGETLOG = program_dir + '/' + DIRLIST4WGETLOG
     IDENTIFY_TARGET_ADVERSARY = program_dir + '/' + IDENTIFY_TARGET_ADVERSARY
+    OPENVPN_VPNGATE_EC2 = program_dir + '/' + OPENVPN_VPNGATE_EC2
 
-if __name__ == '__main__':
+def main():
     change_program_path()
     args = parse_options()
     if args.urls or args.url_file:
         url_list = parse_domain(args.urls, args.url_file)
         execute_commands(url_list, args.flag_no_nmap)
+
+if __name__ == '__main__':
+    main()

@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import whois
+import socket
 import tldextract
 import defang
 import datetime
@@ -59,10 +60,14 @@ def execute_save_whois(domain):
     return filename
 
 def execute_python_whois(domain):
-    python_whois_result = whois.whois(domain)
-    python_whois_result = unique_python_whois_result(python_whois_result)
-    domain_items = get_domain_items(python_whois_result)
-    domain_items['domain'] = domain
+    try:
+        python_whois_result = whois.whois(domain)
+        python_whois_result = unique_python_whois_result(python_whois_result)
+        domain_items = get_domain_items(python_whois_result)
+        domain_items['domain'] = domain
+    except (whois.parser.PywhoisError, socket.gaierror) as e:
+        print('Error Exception: {}'.format(e))
+        exit()
     return domain_items
 
 def unique_python_whois_result(result):
