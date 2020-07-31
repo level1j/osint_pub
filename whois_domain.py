@@ -134,6 +134,8 @@ def output(domain_items_list, output_tsv, output_json):
                         column_string = None
                 if column_string is None or column_string == '':
                     column_string = '-'
+                elif isinstance(column_string, list):
+                    column_string = ','.join(column_string)
                 output_string = output_string + column_string + '\t'
             output_string = output_string[:-1]
             print(output_string)
