@@ -1,4 +1,6 @@
 #!/usr/bin/python3
+import dns.resolver
+import dns.reversename
 import defang
 import argparse
 import pathlib
@@ -60,6 +62,30 @@ def ip2as_cymru(ip_list):
             i = i + 1
     return as_total_list
 
+def get_dns_from_ip(ip):
+    try:
+        addr = dns.reversename.from_address(ip)
+        answers = dns.resolver.query(addr, 'PTR')
+        return str(answers[0])
+    except dns.resolver.NXDOMAIN:
+        return None
+
+def ip2dns(ip_list):
+    dns_list = []
+    for ip in ip_list:
+        dns = get_dns_from_ip(ip)
+        dns_list.append({'ip': ip, 'dns': dns})
+    return dns_list
+
+def merge_ip2as_ip2dns(as_list, dns_list):
+    as_dns_list = []
+    for a in as_list:
+        for dns in dns_list:
+            if a['ip'] == dns['ip']:
+                a['dns'] = dns['dns']
+                as_dns_list.append(a)
+    return as_dns_list
+
 def import_ip_file(ip_file):
     filepath = pathlib.Path(ip_file)
     with filepath.open(mode='r') as f:
@@ -77,6 +103,34 @@ def output(as_list, output_tsv, output_json):
         for as_information in as_list:
             output_string = ''
             for column in columns:
+                output_string = output_string + as_information[column] + '\t'
+            output_string = output_string[:-1]
+            print(output_string)
+    elif output_json:
+        output_string = json.dumps(as_list)
+        print(output_string)
+    else:
+        pprint.pprint(as_list)
+    return
+
+def rename_key_dns_ptr(as_dns_list):
+    as_dns_list_new = []
+    for as_dns in as_dns_list:
+        as_dns['ptr'] = as_dns.pop('dns')
+        as_dns_list_new.append(as_dns)
+    return as_dns_list_new
+
+def output2(as_dns_list, output_tsv, output_json):
+    as_dns_list.sort(key=lambda x: x['ip'])
+    as_dns_list = rename_key_dns_ptr(as_dns_list)
+    if output_tsv:
+        columns = ['ip', 'as', 'country', 'asname', 'ptr']
+        print('\t'.join(columns))
+        for as_information in as_list:
+            output_string = ''
+            for column in columns:
+                if as_information[column] is None:
+                    as_information[column] = 'None'
                 output_string = output_string + as_information[column] + '\t'
             output_string = output_string[:-1]
             print(output_string)
@@ -110,4 +164,7 @@ if __name__ == "__main__":
     args = parse_options()
     ip_list = parse_ip(args.ips, args.ip_file)
     as_list = ip2as_cymru(ip_list)
-    output(as_list, args.output_tsv, args.output_json)
+    #output(as_list, args.output_tsv, args.output_json)
+    dns_list = ip2dns(ip_list)
+    as_dns_list = merge_ip2as_ip2dns(as_list, dns_list)
+    output2(as_dns_list, args.output_tsv, args.output_json)

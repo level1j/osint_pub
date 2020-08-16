@@ -146,7 +146,7 @@ def get_pid_list(psname, args=None):
         pid_list = pid_list_new
     return pid_list
 
-def execute_commands(url_list, flag_no_nmap):
+def execute_commands(url_list, flag_no_nmap, proxy):
     global IP2AS_CYMRU
     global RDAP_AUTO
     global WHOIS_DOMAIN
@@ -181,7 +181,10 @@ def execute_commands(url_list, flag_no_nmap):
                     print(file=log_file_f, flush=True)
                     subprocess.run(['python3', OPENVPN_VPNGATE_EC2], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
             print(file=log_file_f, flush=True)
-            subprocess.run(['python3', SCREENSHOT, '-p', '-s', '--save-html', url], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
+            if proxy is None:
+                subprocess.run(['python3', SCREENSHOT, '-p', '-s', '--save-html', url], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
+            else:
+                subprocess.run(['python3', SCREENSHOT, '-p', '-s', '--save-html', '--proxy', proxy, url], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
             print(file=log_file_f, flush=True)
             subprocess.run(['python3', DIRLIST4WGETLOG, '-d', '.', domain], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
             if check_openvpn():
@@ -234,6 +237,7 @@ def parse_options():
     parser.add_argument('-f', '--file', action='store', dest='url_file', help='url list file')
     parser.add_argument('--no-nmap', action='store_true', dest='flag_no_nmap', default=False, help='disable nmap')
     parser.add_argument('-v', '--openvpn', action='store_true', dest='flag_openvpn', default=FLAG_OPENVPN, help='use vpn')
+    parser.add_argument('--proxy-screenshot', dest='proxy', default=None, help='proxy only for screenshot.py. ex 10.0.1.97:3128')
     args = parser.parse_args()
     FLAG_OPENVPN = args.flag_openvpn
     return args
@@ -262,7 +266,7 @@ def main():
     args = parse_options()
     if args.urls or args.url_file:
         url_list = parse_domain(args.urls, args.url_file)
-        execute_commands(url_list, args.flag_no_nmap)
+        execute_commands(url_list, args.flag_no_nmap, args.proxy)
 
 if __name__ == '__main__':
     main()
