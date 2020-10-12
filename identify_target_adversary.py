@@ -35,18 +35,29 @@ def get_html(html_dir_list):
             target_file_list.append(t)
     return target_file_list
 
+def get_match_rule_name(matches):
+    rule_name_list_all = []
+    for yara_name,v in matches.items():
+        rule_name_list = [d.get('rule') for d in v]
+        rule_name_list_all.extend(list(set(rule_name_list)))
+    return rule_name_list_all
+
 def yara_execute(target_file_list, rules):
     matches_yara = []
+    matches_rule = []
     for target_file in target_file_list:
         try:
             matches = rules.match(target_file)
             if len(matches) > 0:
                 matches_yara.extend(list(matches.keys()))
+                matches_rule.extend(get_match_rule_name(matches))
         except yara.libyara_wrapper.YaraMatchError:
             pass
     matches_yara = list(set(matches_yara))
     matches_yara.sort()
-    return matches_yara
+    matches_rule = list(set(matches_rule))
+    matches_rule.sort()
+    return matches_yara, matches_rule
 
 def import_yara_rules(yara_rules):
     global YARA_RULES_DIR
@@ -74,6 +85,7 @@ def parse_options():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--dir', dest='target_dir', default='.', help='webpreserve directory')
     parser.add_argument('--yara_rules', dest='yara_rules', help='yara rule file or directory')
+    parser.add_argument('-v', '--verbose', action='store_true', default=False, dest='verbose', help='print also rule name')
     args = parser.parse_args()
     return args
 
@@ -83,14 +95,22 @@ if __name__ == '__main__':
     rules = import_yara_rules(args.yara_rules)
 
     webpreserve_file_list = get_file(args.target_dir, '*_webpreserve_*.txt')
-    matches_yara = yara_execute(webpreserve_file_list, rules)
+    matches_yara, matches_rule = yara_execute(webpreserve_file_list, rules)
 
     html_dir_list = get_dir(args.target_dir,  '*_html')
     html_list = get_html(html_dir_list)
-    html_list.extend(get_file('.', '*.selenium.html'))
+    html_list.extend(get_file(args.target_dir, '*.selenium.html'))
 
-    matches_yara.extend(yara_execute(html_list, rules))
+    matches_yara_2, matches_rule_2 = yara_execute(html_list, rules)
+    matches_yara.extend(matches_yara_2)
     matches_yara = list(set(matches_yara))
     matches_yara.sort()
     matches_yara = ','.join(matches_yara)
     print('yara matches:\t{}'.format(matches_yara))
+
+    matches_rule.extend(matches_rule_2)
+    matches_rule = list(set(matches_rule))
+    matches_rule.sort()
+    matches_rule = ','.join(matches_rule)
+    if args.verbose:
+        print('rule matches:\t{}'.format(matches_rule))

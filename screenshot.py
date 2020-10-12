@@ -30,7 +30,8 @@ MODE_SMARTPHONE='smartphone'
 MODE_PC='pc'
 MODE = MODE_SMARTPHONE
 SELENIUM_TIMEOUT_RESPONSE = 1
-SELENIUM_TIMEOUT_RUNSCRIPT = 5
+#SELENIUM_TIMEOUT_RUNSCRIPT = 5
+SELENIUM_TIMEOUT_RUNSCRIPT = 15
 SELENIUM_SLEEP_TIME_PER_HEIGHT = 10
 SELENIUM_SLEEP_TIME_HEIGHT = 10000
 SELENIUM_WEBDRIVER=''
@@ -108,6 +109,7 @@ def wevdriver_initialize_chrome():
     #doesn't work
     #options.add_argument('--lang={}'.format(ACCPET_LANGUAGE))
     #options.add_experimental_option('prefs', {'intl.accept_languages': ACCPET_LANGUAGE})
+    options.set_capability('unhandledPromptBehavior', 'accept')
     if PROXY is not None:
         options.add_argument('--proxy-server=%s' % PROXY)
     driver = webdriver.Chrome(options=options)
@@ -117,11 +119,15 @@ def wevdriver_initialize_chrome():
 def save_screenshot_firefox(url, mode=MODE):
     filename_screenshot = get_save_filename(url, mode) + '.png'
     filename_page_source = get_save_filename(url, mode) + '.selenium.html'
+    driver = wevdriver_initialize_firefox()
     try:
-        driver = wevdriver_initialize_firefox()
         driver.get(url)
         page_width = driver.execute_script('return document.body.scrollWidth')
+        if WIDTH > page_width:
+            page_width = WIDTH
         page_height = driver.execute_script('return document.body.scrollHeight')
+        if HEIGHT > page_height:
+            page_height = HEIGHT
         driver.set_window_size(page_width, page_height)
         sleep_time = (int(page_height / SELENIUM_SLEEP_TIME_HEIGHT) + 1) * SELENIUM_SLEEP_TIME_PER_HEIGHT
         time.sleep(sleep_time)
@@ -140,11 +146,15 @@ def save_screenshot_firefox(url, mode=MODE):
 def save_screenshot_chrome(url, mode=MODE):
     filename_screenshot = get_save_filename(url, mode) + '.png'
     filename_page_source = get_save_filename(url, mode) + '.selenium.html'
+    driver = wevdriver_initialize_chrome()
     try:
-        driver = wevdriver_initialize_chrome()
         driver.get(url)
         page_width = driver.execute_script('return document.body.scrollWidth')
+        if WIDTH > page_width:
+            page_width = WIDTH
         page_height = driver.execute_script('return document.body.scrollHeight')
+        if HEIGHT > page_height:
+            page_height = HEIGHT
         driver.set_window_size(page_width, page_height)
         sleep_time = (int(page_height / SELENIUM_SLEEP_TIME_HEIGHT) + 1) * SELENIUM_SLEEP_TIME_PER_HEIGHT
         time.sleep(sleep_time)
@@ -154,6 +164,8 @@ def save_screenshot_chrome(url, mode=MODE):
             f.write(driver.page_source)
         driver.close()
         driver.quit()
+    except selenium.common.exceptions.UnexpectedAlertPresentException as e:
+        print('Exception: {} for {}'.format(e, url), file=sys.stderr)
     except (selenium.common.exceptions.TimeoutException, selenium.common.exceptions.WebDriverException) as e:
         print('Exception: {} for {}'.format(e, url), file=sys.stderr)
     return

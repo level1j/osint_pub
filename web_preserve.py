@@ -37,13 +37,15 @@ def get_now_with_sec():
     return d.strftime('%Y%m%d%H%M%S')
 
 def get_validate_url(url):
-    class bcolors:
-        WARNING = '\033[93m'
-        ENDC = '\033[0m'
     url = defang.refang(url)
     o = urlparse(url)
+    if o.path == '/':
+        url = url.rstrip('/')
     if o.scheme == '':
         newurl = 'https://' + url
+        class bcolors:
+            WARNING = '\033[93m'
+            ENDC = '\033[0m'
         print(bcolors.WARNING + '{} doesn\'t have a scheme which is modified to {}'.format(url, newurl) + bcolors.ENDC, file=sys.stderr)
         url = newurl
     return url
@@ -221,14 +223,15 @@ def import_domain_file(domain_file):
                 domain_list.append(domain)
     return domain_list
 
-def parse_domain(domains, domain_file):
-    domain_list = []
-    if domains:
-        domain_list.extend(domains.split(','))
-    if domain_file:
-        domain_list.extend(import_domain_file(domain_file))
-    domain_list = list(set(domain_list))
-    return domain_list
+def parse_urls(urls, url_file):
+    url_list = []
+    if urls:
+        url_list.extend(urls.split(','))
+    if url_file:
+        url_list.extend(import_domain_file(url_file))
+    url_list = list(map(lambda x: get_validate_url(x), url_list))
+    url_list = list(set(url_list))
+    return url_list
 
 def parse_options():
     global FLAG_OPENVPN
@@ -265,7 +268,7 @@ def main():
     change_program_path()
     args = parse_options()
     if args.urls or args.url_file:
-        url_list = parse_domain(args.urls, args.url_file)
+        url_list = parse_urls(args.urls, args.url_file)
         execute_commands(url_list, args.flag_no_nmap, args.proxy)
 
 if __name__ == '__main__':

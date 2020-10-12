@@ -186,10 +186,11 @@ def check_title_index(filepath):
             return False
         soup = BeautifulSoup(content, 'lxml')
         if soup.find('title'):
-            for index_title in index_titles:
-                s = re.search(index_title, soup.title.string, re.IGNORECASE)
-                if s:
-                    return True
+            if soup.title.string is not None:
+                for index_title in index_titles:
+                    s = re.search(index_title, soup.title.string, re.IGNORECASE)
+                    if s:
+                        return True
     return False
 
 def get_wget_index_of_html_from_wget_archive():
