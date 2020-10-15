@@ -128,6 +128,8 @@ def output(cert_items, output_tsv, output_json):
         print('\t'.join(columns))
         output_string = ''
         for column in columns:
+            if cert_items[column] is None:
+                cert_items[column] = '-'
             if column == 'sans':
                 cert_items[column] = ','.join(cert_items[column])
             output_string = output_string + cert_items[column] + '\t'
