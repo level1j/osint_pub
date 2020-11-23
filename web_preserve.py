@@ -190,8 +190,10 @@ def execute_commands(url_list, flag_no_nmap, proxy):
                 subprocess.run(['python3', SCREENSHOT, '-p', '-s', '--save-html', '--proxy', proxy, url], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
             print(file=log_file_f, flush=True)
             subprocess.run(['python3', DIRLIST4WGETLOG, '-d', '.', domain], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
-            print(file=log_file_f, flush=True)
-            subprocess.run(['python3', ADMINFINDER, url], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
+            p = pathlib.Path(ADMINFINDER)
+            if p.exists() :
+                print(file=log_file_f, flush=True)
+                subprocess.run(['python3', ADMINFINDER, url], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
             if check_openvpn():
                 pid_list = get_pid_list('python3', args='web_preserve.py')
                 if len(pid_list) == 1:
