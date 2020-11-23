@@ -24,6 +24,7 @@ WHOIS_DOMAIN = 'whois_domain.py'
 SSL_AUTO = 'ssl_wrapper.py'
 SCREENSHOT = 'screenshot.py'
 DIRLIST4WGETLOG = 'dirlist4wgetlog.py'
+ADMINFINDER = 'adminfinder.py'
 IDENTIFY_TARGET_ADVERSARY = 'identify_target_adversary.py'
 OPENVPN_VPNGATE_EC2 = 'openvpn_vpngate_ec2.py'
 FLAG_OPENVPN = False
@@ -58,7 +59,7 @@ def get_ip_from_dns(d):
     try:
         answers = dns.resolver.query(d, 'A')
         return str(answers[0])
-    except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer) as e:
+    except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer, dns.resolver.NoNameservers) as e:
         print(e)
         return '-'
 
@@ -189,6 +190,8 @@ def execute_commands(url_list, flag_no_nmap, proxy):
                 subprocess.run(['python3', SCREENSHOT, '-p', '-s', '--save-html', '--proxy', proxy, url], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
             print(file=log_file_f, flush=True)
             subprocess.run(['python3', DIRLIST4WGETLOG, '-d', '.', domain], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
+            print(file=log_file_f, flush=True)
+            subprocess.run(['python3', ADMINFINDER, url], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
             if check_openvpn():
                 pid_list = get_pid_list('python3', args='web_preserve.py')
                 if len(pid_list) == 1:
@@ -254,6 +257,7 @@ def change_program_path():
     global DIRLIST4WGETLOG
     global IDENTIFY_TARGET_ADVERSARY
     global OPENVPN_VPNGATE_EC2
+    global ADMINFINDER
     program_dir = os.path.dirname(os.path.abspath(__file__))
     IP2AS_CYMRU = program_dir + '/' + IP2AS_CYMRU
     RDAP_AUTO = program_dir + '/' + RDAP_AUTO
@@ -263,6 +267,7 @@ def change_program_path():
     DIRLIST4WGETLOG = program_dir + '/' + DIRLIST4WGETLOG
     IDENTIFY_TARGET_ADVERSARY = program_dir + '/' + IDENTIFY_TARGET_ADVERSARY
     OPENVPN_VPNGATE_EC2 = program_dir + '/' + OPENVPN_VPNGATE_EC2
+    ADMINFINDER = program_dir + '/' + ADMINFINDER
 
 def main():
     change_program_path()

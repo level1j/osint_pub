@@ -119,8 +119,8 @@ def wevdriver_initialize_chrome():
 def save_screenshot_firefox(url, mode=MODE):
     filename_screenshot = get_save_filename(url, mode) + '.png'
     filename_page_source = get_save_filename(url, mode) + '.selenium.html'
-    driver = wevdriver_initialize_firefox()
     try:
+        driver = wevdriver_initialize_firefox()
         driver.get(url)
         page_width = driver.execute_script('return document.body.scrollWidth')
         if WIDTH > page_width:
@@ -140,14 +140,14 @@ def save_screenshot_firefox(url, mode=MODE):
         driver.quit()
         remove_geckodriver_log()
     except (selenium.common.exceptions.TimeoutException, selenium.common.exceptions.WebDriverException) as e:
-        print('Exception: {} for {}'.format(e, url), file=sys.stderr)
+        print('Exception(save_screenshot_firefox): {} for {}'.format(e, url), file=sys.stderr)
     return
 
 def save_screenshot_chrome(url, mode=MODE):
     filename_screenshot = get_save_filename(url, mode) + '.png'
     filename_page_source = get_save_filename(url, mode) + '.selenium.html'
-    driver = wevdriver_initialize_chrome()
     try:
+        driver = wevdriver_initialize_chrome()
         driver.get(url)
         page_width = driver.execute_script('return document.body.scrollWidth')
         if WIDTH > page_width:
@@ -165,9 +165,9 @@ def save_screenshot_chrome(url, mode=MODE):
         driver.close()
         driver.quit()
     except selenium.common.exceptions.UnexpectedAlertPresentException as e:
-        print('Exception: {} for {}'.format(e, url), file=sys.stderr)
+        print('Exception(save_screenshot_chrome1): {} for {}'.format(e, url), file=sys.stderr)
     except (selenium.common.exceptions.TimeoutException, selenium.common.exceptions.WebDriverException) as e:
-        print('Exception: {} for {}'.format(e, url), file=sys.stderr)
+        print('Exception(save_screenshot_chrome2): {} for {}'.format(e, url), file=sys.stderr)
     return
 
 def save_screenshot(url, mode=MODE):
@@ -190,12 +190,12 @@ def save_html(url, mode=MODE):
     url_robot = get_robotstxt_from_url(url)
     if PROXY is None:
         subprocess.run(['wget', '-HpkK', '--no-check-certificate', '--content-on-error', '--server-response', '-o', filename_log, '-P', dirname_html, '-U', USERAGENT, '--prefer-family=IPv4', '-e', 'robots=off', '-T', str(WGET_TIMEOUT), '-t', str(WGET_RETRY_NUMBER), '-Q', WGET_MAX_FILE_SIZE, url], stdin=subprocess.DEVNULL, shell=False)
-        subprocess.run(['wget', '-HpkK', '--no-check-certificate', '--content-on-error', '--server-response', '-a', filename_log, '-P', dirname_html, '-U', USERAGENT, '--prefer-family=IPv4', '-e', 'robots=off', '-T', str(WGET_TIMEOUT), '-t', str(WGET_RETRY_NUMBER), '-Q', WGET_MAX_FILE_SIZE, url_robot], stdin=subprocess.DEVNULL, shell=False)
+        subprocess.run(['wget', '-pkK', '--no-check-certificate', '--content-on-error', '--server-response', '-a', filename_log, '-P', dirname_html, '-U', USERAGENT, '--prefer-family=IPv4', '-e', 'robots=off', '-T', str(WGET_TIMEOUT), '-t', str(WGET_RETRY_NUMBER), '-Q', WGET_MAX_FILE_SIZE, url_robot], stdin=subprocess.DEVNULL, shell=False)
     else:
         http_proxy = 'http_proxy=' + PROXY
         https_proxy = 'https_proxy=' + PROXY
         subprocess.run(['wget', '-e', http_proxy, '-e', https_proxy, '-HpkK', '--no-check-certificate', '--content-on-error', '--server-response', '-o', filename_log, '-P', dirname_html, '-U', USERAGENT, '--prefer-family=IPv4', '-e', 'robots=off', '-T', str(WGET_TIMEOUT), '-t', str(WGET_RETRY_NUMBER), '-Q', WGET_MAX_FILE_SIZE, url], stdin=subprocess.DEVNULL, shell=False)
-        subprocess.run(['wget', '-e', http_proxy, '-e', https_proxy, '-HpkK', '--no-check-certificate', '--content-on-error', '--server-response', '-a', filename_log, '-P', dirname_html, '-U', USERAGENT, '--prefer-family=IPv4', '-e', 'robots=off', '-T', str(WGET_TIMEOUT), '-t', str(WGET_RETRY_NUMBER), '-Q', WGET_MAX_FILE_SIZE, url_robot], stdin=subprocess.DEVNULL, shell=False)
+        subprocess.run(['wget', '-e', http_proxy, '-e', https_proxy, '-pkK', '--no-check-certificate', '--content-on-error', '--server-response', '-a', filename_log, '-P', dirname_html, '-U', USERAGENT, '--prefer-family=IPv4', '-e', 'robots=off', '-T', str(WGET_TIMEOUT), '-t', str(WGET_RETRY_NUMBER), '-Q', WGET_MAX_FILE_SIZE, url_robot], stdin=subprocess.DEVNULL, shell=False)
 
 def set_browser_env(mode):
     global USERAGENT
@@ -273,7 +273,7 @@ def parse_options():
     elif args.webdriver_chrome:
         SELENIUM_WEBDRIVER = SELENIUM_WEBDRIVER_CHROME
     else:
-        SELENIUM_WEBDRIVER = SELENIUM_WEBDRIVER_CHROME
+        SELENIUM_WEBDRIVER = SELENIUM_WEBDRIVER_FIREFOX
     return args
 
 def main():

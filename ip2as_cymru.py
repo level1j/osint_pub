@@ -67,7 +67,7 @@ def get_dns_from_ip(ip):
         addr = dns.reversename.from_address(ip)
         answers = dns.resolver.query(addr, 'PTR')
         return str(answers[0])
-    except dns.resolver.NXDOMAIN:
+    except (dns.resolver.NXDOMAIN, dns.resolver.NoNameservers) as e:
         return None
 
 def ip2dns(ip_list):
