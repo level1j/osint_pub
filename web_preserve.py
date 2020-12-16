@@ -191,7 +191,7 @@ def execute_commands(url_list, flag_no_nmap, proxy):
             print(file=log_file_f, flush=True)
             subprocess.run(['python3', DIRLIST4WGETLOG, '-d', '.', domain], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
             p = pathlib.Path(ADMINFINDER)
-            if p.exists() :
+            if p.exists():
                 print(file=log_file_f, flush=True)
                 subprocess.run(['python3', ADMINFINDER, url], stdin=subprocess.DEVNULL, stdout=log_file_f, stderr=log_file_f, shell=False)
             if check_openvpn():

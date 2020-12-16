@@ -100,6 +100,7 @@ if __name__ == '__main__':
     html_dir_list = get_dir(args.target_dir,  '*_html')
     html_list = get_html(html_dir_list)
     html_list.extend(get_file(args.target_dir, '*.selenium.html'))
+    html_list.extend(get_file(args.target_dir, '**/*_urlscan_*'))
 
     matches_yara_2, matches_rule_2 = yara_execute(html_list, rules)
     matches_yara.extend(matches_yara_2)

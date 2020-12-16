@@ -19,11 +19,12 @@ import subprocess
 import argparse
 import pprint
 
-MODE_SMARTPHONE='MODE_SMARTPHONE'
+MODE_SMARTPHONE='smartphone'
+MODE_PC='pc'
 #USERAGENT_SMARTPHONE='Mozilla/5.0 (iPhone; CPU OS 10_15_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Mobile/14E304 Safari/605.1.15'
 USERAGENT_SMARTPHONE='Mozilla/5.0 (iPhone; CPU iPhone OS 13_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/81.0.4044.124 Mobile/15E148 Safari/604.1'
 USERAGENT_PC='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:73.0) Gecko/20100101 Firefox/73.0'
-WGET_TIMEOUT=1
+WGET_TIMEOUT=10
 WGET_RETRY_NUMBER=2
 WGET_MAX_FILE_SIZE='10m'
 INTERESTING_EXTS = ['php', 'zip', 'gz', 'tgz', 'sh', 'asp', 'csv', 'log', '']
@@ -132,8 +133,8 @@ def find_or_define_wget_log_name(url, mode):
     suffix = get_suffix_from_mode(mode)
     o = urlparse(url)
     p = pathlib.Path('.')
-    #filename_search = '**/' + o.scheme + '_' + o.hostname + '_' + suffix + '_' + '*' + '.html.log'
-    filename_search = '**/' + o.scheme + '_*' + get_domain_from_url(url) + '_' + suffix + '_' + '*' + '.html.log'
+    #filename_search = '**/' + o.scheme + '_*' + get_domain_from_url(url) + '_' + suffix + '_' + '*' + '.html.log'
+    filename_search = o.scheme + '_*' + get_domain_from_url(url) + '_' + suffix + '_' + '*' + '.html.log'
     file_path_list = [p for p in p.glob(filename_search) if os.path.isfile(p)]
     if len(file_path_list) > 0:
         file_path_list.sort(reverse=True)
@@ -146,8 +147,8 @@ def find_or_define_wget_dir_name(url, mode):
     suffix = get_suffix_from_mode(mode)
     o = urlparse(url)
     p = pathlib.Path('.')
-    #filename_search = '**/' + o.scheme + '_' + o.hostname + '_' + suffix + '_' + '*' + '_html'
-    filename_search = '**/' + o.scheme + '_*' + get_domain_from_url(url) + '_' + suffix + '_' + '*' + '_html'
+    #filename_search = '**/' + o.scheme + '_*' + get_domain_from_url(url) + '_' + suffix + '_' + '*' + '_html'
+    filename_search = o.scheme + '_*' + get_domain_from_url(url) + '_' + suffix + '_' + '*' + '_html'
     dir_path_list = [p for p in p.glob(filename_search) if os.path.isdir(p)]
     if len(dir_path_list) > 0:
         dir_path_list.sort(reverse=True)

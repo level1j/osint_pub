@@ -62,7 +62,7 @@ $ source ~/.bashrc
 
 1. web_preserve.py
 
-Execute ip2as_cymru, whois_domain, rdap_wrapper, ssl_wrapper, screenshot and dirlist4wgetlog
+Execute ip2as_cymru, whois_domain, rdap_wrapper, ssl_wrapper, screenshot, dirlist4wgetlog and identify_target_adversary
 
 ```
 $ ./web_preserve.py --help
@@ -189,4 +189,16 @@ optional arguments:
 			webpreserve directory
   --yara_rules YARA_RULES
 			yara rule file or directory
+```
+
+9. urlscan.py
+
+```
+$ ./urlscan.py --help
+usage: urlscan.py [-h] [--hostname HOSTNAME] [--top TOP]
+
+optional arguments:
+  -h, --help	       show this help message and exit
+  --hostname HOSTNAME  hostname
+  --top TOP	       How many result?
 ```
