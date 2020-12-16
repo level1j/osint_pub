@@ -273,7 +273,7 @@ def parse_options():
     elif args.webdriver_chrome:
         SELENIUM_WEBDRIVER = SELENIUM_WEBDRIVER_CHROME
     else:
-        SELENIUM_WEBDRIVER = SELENIUM_WEBDRIVER_CHROME
+        SELENIUM_WEBDRIVER = SELENIUM_WEBDRIVER_FIREFOX
     return args
 
 def main():
