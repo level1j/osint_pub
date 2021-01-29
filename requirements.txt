@@ -2,9 +2,10 @@ beautifulsoup4
 defang
 dnspython
 lxml
+psutil
+pytz
 python-dateutil
 python-whois
 selenium
-Selenium-Screenshot
 tldextract
 yara

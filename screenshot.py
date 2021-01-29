@@ -2,7 +2,6 @@
 import defang
 import selenium
 from selenium import webdriver
-import selenium.webdriver.firefox
 from urllib.parse import urlparse
 import time
 import os
@@ -12,6 +11,7 @@ import psutil
 import datetime
 from pytz import timezone
 import argparse
+import pprint
 
 USERAGENT_SMARTPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Mobile/15E148 Safari/604.1'
 USERAGENT_PC = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36 Edg/84.0.522.50'
@@ -29,14 +29,18 @@ GECKODRIVER_LOG='geckodriver.log'
 MODE_SMARTPHONE='smartphone'
 MODE_PC='pc'
 MODE = MODE_SMARTPHONE
-SELENIUM_TIMEOUT_RESPONSE = 1
-#SELENIUM_TIMEOUT_RUNSCRIPT = 5
-SELENIUM_TIMEOUT_RUNSCRIPT = 10
-SELENIUM_SLEEP_TIME_PER_HEIGHT = 15
-SELENIUM_SLEEP_TIME_HEIGHT = 10000
 SELENIUM_WEBDRIVER=''
 SELENIUM_WEBDRIVER_FIREFOX='firefox'
 SELENIUM_WEBDRIVER_CHROME='chrome'
+SELENIUM_SLEEP_TIME = 15
+SELENIUM_SLEEP_TIME_PER_HEIGHT = 5
+HEIGHT_ADD_SELENIUM_SLEEP = 2000
+SELENIUM_TIMEOUT_RESPONSE_FIREFOX = 10
+SELENIUM_TIMEOUT_RUNSCRIPT_FIREFOX = 10
+ERROR_MSG = [
+    'unknown error: net::ERR_NAME_NOT_RESOLVED',
+    'Reached error page: about:neterror'
+]
 WGET_TIMEOUT = 10
 WGET_RETRY_NUMBER = 2
 WGET_MAX_FILE_SIZE = '10m'
@@ -79,8 +83,8 @@ def wevdriver_initialize_firefox():
     options.add_argument('--headless')
     profile = webdriver.FirefoxProfile()
     profile.set_preference('general.useragent.override', USERAGENT)
-    profile.set_preference('http.response.timeout', SELENIUM_TIMEOUT_RESPONSE)
-    profile.set_preference('dom.max_script_run_time', SELENIUM_TIMEOUT_RUNSCRIPT)
+    profile.set_preference('http.response.timeout', SELENIUM_TIMEOUT_RESPONSE_FIREFOX)
+    profile.set_preference('dom.max_script_run_time', SELENIUM_TIMEOUT_RUNSCRIPT_FIREFOX)
     profile.set_preference('intl.accept_languages', ACCPET_LANGUAGE)
     profile.accept_untrusted_certs = True
     if PROXY is None:
@@ -106,9 +110,9 @@ def wevdriver_initialize_chrome():
     options.add_argument('--disable-gpu')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--no-sandbox')
-    #doesn't work
-    #options.add_argument('--lang={}'.format(ACCPET_LANGUAGE))
-    #options.add_experimental_option('prefs', {'intl.accept_languages': ACCPET_LANGUAGE})
+    options.add_argument('--disable-extensions')
+    options.add_argument('--allow-running-insecure-content')
+    options.add_argument('--disable-web-security')
     options.set_capability('unhandledPromptBehavior', 'accept')
     if PROXY is not None:
         options.add_argument('--proxy-server=%s' % PROXY)
@@ -116,67 +120,73 @@ def wevdriver_initialize_chrome():
     driver.set_window_size(WIDTH, HEIGHT)
     return driver
 
-def save_screenshot_firefox(url, mode=MODE):
-    filename_screenshot = get_save_filename(url, mode) + '.png'
-    filename_page_source = get_save_filename(url, mode) + '.selenium.html'
+def save_screenshot_common(driver, url, filename_screenshot, filename_page_source):
+    driver.get(url)
+    page_width = driver.execute_script('return document.body.scrollWidth')
+    if WIDTH > page_width:
+        page_width = WIDTH
+    page_height = driver.execute_script('return document.body.scrollHeight')
+    if HEIGHT > page_height:
+        page_height = HEIGHT
+    driver.set_window_size(page_width, page_height)
+    sleep_time = SELENIUM_SLEEP_TIME + ((int(page_height / HEIGHT_ADD_SELENIUM_SLEEP)) * SELENIUM_SLEEP_TIME_PER_HEIGHT)
+    time.sleep(sleep_time)
+    with open(filename_page_source, mode='w') as f:
+        f.write(driver.page_source)
+    #driver.save_screenshot(filename_screenshot)
+    el = driver.find_element_by_tag_name('body')
+    el.screenshot(filename_screenshot)
+    return
+
+def is_excepted_WebDriverException(e):
+    flag_em = False
+    for em in ERROR_MSG:
+        if em in e.msg:
+            flag_em = True
+    return flag_em
+
+def save_screenshot_firefox(url, filename_screenshot, filename_page_source):
     try:
         driver = wevdriver_initialize_firefox()
-        driver.get(url)
-        page_width = driver.execute_script('return document.body.scrollWidth')
-        if WIDTH > page_width:
-            page_width = WIDTH
-        page_height = driver.execute_script('return document.body.scrollHeight')
-        if HEIGHT > page_height:
-            page_height = HEIGHT
-        driver.set_window_size(page_width, page_height)
-        sleep_time = (int(page_height / SELENIUM_SLEEP_TIME_HEIGHT) + 1) * SELENIUM_SLEEP_TIME_PER_HEIGHT
-        time.sleep(sleep_time)
-        #driver.save_screenshot(filename_screenshot)
-        el = driver.find_element_by_tag_name('body')
-        el.screenshot(filename_screenshot)
-        with open(filename_page_source, mode='w') as f:
-            f.write(driver.page_source)
+        save_screenshot_common(driver, url, filename_screenshot, filename_page_source)
+    except (selenium.common.exceptions.TimeoutException) as e:
+        print('Exception(save_screenshot_firefox1): {} for {}'.format(e, url), file=sys.stderr)
+    except (selenium.common.exceptions.WebDriverException) as e:
+        print('Exception(save_screenshot_firefox2): {} for {}'.format(e, url), file=sys.stderr)
+        if not is_excepted_WebDriverException(e):
+            driver.save_screenshot(filename_screenshot)
+    finally:
         driver.close()
         driver.quit()
         remove_geckodriver_log()
-    except (selenium.common.exceptions.TimeoutException, selenium.common.exceptions.WebDriverException) as e:
-        print('Exception(save_screenshot_firefox): {} for {}'.format(e, url), file=sys.stderr)
     return
 
-def save_screenshot_chrome(url, mode=MODE):
-    filename_screenshot = get_save_filename(url, mode) + '.png'
-    filename_page_source = get_save_filename(url, mode) + '.selenium.html'
+def save_screenshot_chrome(url, filename_screenshot, filename_page_source):
     try:
         driver = wevdriver_initialize_chrome()
-        driver.get(url)
-        page_width = driver.execute_script('return document.body.scrollWidth')
-        if WIDTH > page_width:
-            page_width = WIDTH
-        page_height = driver.execute_script('return document.body.scrollHeight')
-        if HEIGHT > page_height:
-            page_height = HEIGHT
-        driver.set_window_size(page_width, page_height)
-        sleep_time = (int(page_height / SELENIUM_SLEEP_TIME_HEIGHT) + 1) * SELENIUM_SLEEP_TIME_PER_HEIGHT
-        time.sleep(sleep_time)
-        el = driver.find_element_by_tag_name('body')
-        el.screenshot(filename_screenshot)
-        with open(filename_page_source, mode='w') as f:
-            f.write(driver.page_source)
+        save_screenshot_common(driver, url, filename_screenshot, filename_page_source)
+    except (selenium.common.exceptions.TimeoutException) as e:
+        print('Exception(save_screenshot_chrome1): {} for {}'.format(e, url), file=sys.stderr)
+    except (selenium.common.exceptions.WebDriverException) as e:
+        print('Exception(save_screenshot_chrome2): {} for {}'.format(e, url), file=sys.stderr)
+        if not is_excepted_WebDriverException(e):
+            driver.save_screenshot(filename_screenshot)
+    except (selenium.common.exceptions.UnexpectedAlertPresentException) as e:
+        print('Exception(save_screenshot_chrome3): {} for {}'.format(e, url), file=sys.stderr)
+    finally:
         driver.close()
         driver.quit()
-    except selenium.common.exceptions.UnexpectedAlertPresentException as e:
-        print('Exception(save_screenshot_chrome1): {} for {}'.format(e, url), file=sys.stderr)
-    except (selenium.common.exceptions.TimeoutException, selenium.common.exceptions.WebDriverException) as e:
-        print('Exception(save_screenshot_chrome2): {} for {}'.format(e, url), file=sys.stderr)
     return
 
 def save_screenshot(url, mode=MODE):
+    filename_screenshot = get_save_filename(url, mode) + '.png'
+    filename_page_source = get_save_filename(url, mode) + '.selenium.html'
     if SELENIUM_WEBDRIVER == SELENIUM_WEBDRIVER_FIREFOX:
-        save_screenshot_firefox(url, mode)
+        save_screenshot_firefox(url, filename_screenshot, filename_page_source)
     elif SELENIUM_WEBDRIVER == SELENIUM_WEBDRIVER_CHROME:
-        save_screenshot_chrome(url, mode)
+        save_screenshot_chrome(url, filename_screenshot, filename_page_source)
     else:
-        save_screenshot_firefox(url, mode)
+        save_screenshot_firefox(url, filename_screenshot, filename_page_source)
 
 def get_robotstxt_from_url(url):
     o = urlparse(url)
@@ -273,7 +283,7 @@ def parse_options():
     elif args.webdriver_chrome:
         SELENIUM_WEBDRIVER = SELENIUM_WEBDRIVER_CHROME
     else:
-        SELENIUM_WEBDRIVER = SELENIUM_WEBDRIVER_FIREFOX
+        SELENIUM_WEBDRIVER = SELENIUM_WEBDRIVER_CHROME
     return args
 
 def main():
